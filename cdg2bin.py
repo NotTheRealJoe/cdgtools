@@ -39,35 +39,32 @@ def findmatch(file):
 	ext = file[-3:].lower()
 	base = file[:-3]
 
-	if ext == 'mp3' or ext == 'ogg':
-		audio = file
-		find = 'cdg'
-		match = [
-			'cdg', 'cDg', 'cdG', 'cDG',
-			'Cdg', 'CDg', 'CdG', 'CDG',
-			]
-	elif ext == 'cdg':
-		cdg = file
-		find = 'audio'
-		match = [
-                        'mp3', 'mP3', 'Mp3', 'MP3',
-                        'ogg', 'oGg', 'ogG', 'oGG',
-                        'Ogg', 'OGg', 'OgG', 'OGG'
-			]
+    audio_file = None
+    cdg_file = None
 
-	for i in match:
-		f = base + i
-		if (os.path.isfile(f)):
-			if find == 'cdg':
-				cdg = f
-			elif find == 'audio':
-				audio = f
-			break
-	
-	if cdg and audio:
-		return (cdg, audio)
-	else:
-		return (False, False)
+    if ext == 'mp3' or ext == 'ogg' or ext == 'wav':
+        audio_file = file
+        find = 'cdg'
+        match = ['cdg']
+    elif ext == 'cdg':
+        cdg_file = file
+        find = 'audio'
+        match = ['ogg', 'mp3']
+
+    for possible_ext in match:
+        found_file = base + possible_ext
+        if os.path.isfile(found_file):
+            if find == 'cdg':
+                cdg_file = found_file
+            elif find == 'audio':
+                audio_file = found_file
+            break
+
+    if cdg_file and audio_file:
+        return cdg_file, audio_file
+    else:
+        return False, False
+
 
 def archivetype(file):
 	"""Determine an archive's type based on the extension. Returns false if
