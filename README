@@ -1,0 +1,348 @@
+
+---------------------------------------------------------------------------
+
+Release:       cdgtools v0.3.2
+Date:          02/06/2009
+License:       LGPL
+Website:       http://www.kibosh.org/cdgtools/
+Authors:       Kelvin Lawson <kelvinl@users.sf.net>
+               Will Ferrell <willfe@gmail.com>
+
+---------------------------------------------------------------------------
+
+INTRODUCTION
+
+cdgtools is a suite of software tools for handling CD+G karaoke disks on Linux
+as well as other operating systems.
+
+It currently includes:
+
+ * cdgrip:           Rip CD+G disks to MP3+G (command-line tool)
+ * cdg2bin:	     Convert MP3/OGG+G tracks to CD+G disc image
+ * cdggui:           GUI version of cdgrip
+ * cdgdao/cdgparse:  Python modules for handling CD+G data
+ * cdg2text:         Convert binary .cdg files to a textual representation 
+ * cdgcddb:          FreeDB/CDDB query module
+
+cdgtools is evolving, let us know if there are any other CD+G tools that you
+would like to see added.
+
+---------------------------------------------------------------------------
+
+CDGRIP / CDGGUI
+
+cdgrip and cdggui allow you to rip your CD+G disks and encode them to MP3+G
+files. You can optionally look up the CD+G disk using FreeDB/CDDB to get actual
+track names for the resultant .mp3 and .cdg files.
+
+cdgrip is a command-line tool, and cdggui provides you with a GUI, but both
+tools perform the same function - you can choose whichever interface suits you
+best.
+
+The tools works together with cdrdao, and should therefore run on any operating
+system for which cdrdao is available. Development and testing was done on
+Linux.
+
+Note that not all drives support reading CD+G disks. To be able to read the
+graphics data, your drive needs to support reading RW subchannel data.  You can
+use any CD/DVD drive that supports either raw interleaved mode or deinterleaved
+mode.
+
+Requirements for cdgrip are:
+
+ * Python
+ * cdrdao
+ * lame
+
+Adding support for other CD ripping packages or audio encoders is relatively
+easy. If cdrdao or lame are not available on your system, feel free to suggest
+adding support for alternative packages.
+
+---------------------------------------------------------------------------
+
+CDG2BIN
+
+cdg2bin is a command-line utility to create a cdrdao-compatible image and cue
+sheet (TOC file) from one or more CD+G tracks. It can convert both MP3+G and
+OGG+G tracks, and can handle them plain (two files per track, one .cdg and one
+.ogg or .mp3) or archived (.zip, .tar.gz, and .tar.bz2 are supported -- one
+track per archive).
+
+It supports byte-swapping as well to ensure audio data is in the correct byte
+order for recording. On x86 and AMD64 platforms, the default options should
+produce correct results.
+
+The resulting .bin and .cue files can be immediately burned by cdrdao.
+Currently, only "cooked" mode is supported (thus only CD recorders that support
+writing cooked R-W subchannel data are currently supported).
+
+Requirements for cdg2bin:
+
+ * Python
+ * lame (for decoding MP3 files)
+ * oggdec (for decoding OGG files)
+
+---------------------------------------------------------------------------
+
+CDGDAO/CDGPARSE
+
+These are general purpose Python modules for accessing CD+G data in binary rips
+of CDs. They can be used to create CD+G ripping software, and are easily
+extended to support rippers other than cdrdao.
+
+Requirements for these modules:
+
+ * Python
+
+---------------------------------------------------------------------------
+
+CDG2TEXT
+
+cdg2text is a debugging tool that generates textual representations of your
+binary .cdg files.
+
+Requirements for cdg2text:
+
+ * Python
+
+---------------------------------------------------------------------------
+
+CDGCDDB
+
+cdgcddb is a module for querying FreeDB/CDDB records. It is not CDG-specific
+and can therefore be used as a general purpose FreeDB/CDDB module.
+
+Requirements for cdgcddb:
+
+ * Python
+
+---------------------------------------------------------------------------
+
+INSTALLATION
+
+cdgtools can be unpacked and run directly from the unpack location.
+
+To use cdgtools you need to install the prerequisites. Linux users should find
+these packages available directly from their distro's package manager.  For
+example Gentoo users can install all prerequisites using:
+
+    # emerge python lame cdrdao
+
+---------------------------------------------------------------------------
+
+CDGGUI QUICK START
+
+cdgtools does not perform the actual ripping from CD/DVD drives - cdrdao is
+used for that. Before calling cdggui, you should use cdrdao to rip your CD+G
+disk. This generates a BIN file and a TOC file, which you can then open in
+cdggui to do the MP3+G encoding.
+
+To use cdrdao, try the following from the command-line (replacing the --device
+option by the path to your CD or DVD device):
+
+   $ cdrdao read-cd --driver generic-mmc-raw --device /dev/cdroms/cdrom0
+                    --read-subchan rw_raw mycd.toc
+
+You may need to use a different --driver option or --read-subchan mode to
+cdrdao depending on your CD device. For more in depth details, see the full
+cdrdao instructions below.
+
+Once the disk has been ripped you can open it in cdggui:
+
+   $ python cdggui.py
+
+You can then open your TOC file from the File menu, and encode single tracks by
+right-clicking in the track list, or encode the whole CD using the Actions
+menu.
+
+---------------------------------------------------------------------------
+
+CDGRIP QUICK START
+
+To start using cdgrip immediately, try the following from the command-line
+(replacing the --device option by the path to your CD or DVD device):
+
+   $ cdrdao read-cd --driver generic-mmc-raw --device /dev/cdroms/cdrom0
+                    --read-subchan rw_raw mycd.toc
+   $ python cdgrip.py --delete-bin-toc --with-cddb mycd.toc
+
+You may need to use a different --driver option or --read-subchan mode to
+cdrdao depending on your CD device. For more in depth details, see the full
+instructions below.
+
+---------------------------------------------------------------------------
+
+CDRDAO RIPPING INSTRUCTIONS
+
+cdgtools makes use of cdrdao for performing the actual raw read from your CD or
+DVD drive. You must rip your disk using cdrdao before using the cdgrip
+command-line tool or the cdggui GUI ripper.
+
+The CD+G disk should be ripped using the --read-subchan command of cdrdao. An
+example command-line is:
+
+   $ cdrdao read-cd --driver generic-mmc-raw --device /dev/cdroms/cdrom0 
+                    --read-subchan rw_raw mycd.toc
+
+You should replace the device by the correct path to your CD/DVD drive.  You
+may also need to use a different driver, depending on your drive. See the
+cdrdao manpage for more details on the driver options.
+
+You can rip in either rw_raw (interleaved) or rw (deinterleaved) modes,
+depending on what modes your CD drive supports. If your drive only supports
+reading in rw (deinterleaved) mode, you can replace "--read-subchan rw_raw"
+with "--read-subchan rw". Note that no deinterleaved mode drives were available
+for testing, please let us know what success you have with this mode.
+
+Once the cdrdao rip is complete, you should be left with a toc file (e.g.
+mycd.toc) and a bin file (data.bin by default). You can now use cdgrip
+(command-line) or cdggui (GUI) to do the MP3+G encoding:
+
+  $ python cdgrip.py mycd.toc
+
+  or
+
+  $ python cdggui.py
+
+---------------------------------------------------------------------------
+
+CDGRIP COMMAND LINE OPTIONS
+
+Once you have generated the TOC/BIN files using cdrdao, you can do a basic
+command-line rip using:
+
+  $ python cdgrip.py mycd.toc
+
+This will rip the entire CD, generating a full set of .mp3 and .cdg files for
+you (using generic track names, not CDDB-queried names).
+
+The toc and bin files are left on disk by default. If you would like cdgrip to
+delete them for you when it is finished, add the --delete-bin-toc option:
+
+  $ python cdgrip.py --delete-bin-toc mycd.toc
+
+By default cdgrip uses generic track names (track01.mp3, track02.mp3 etc). To
+attempt to get actual track names using a FreeDB/CDDB connection, add the
+--with-cddb option:
+
+  $ python cdgrip.py --with-cddb mycd.toc
+
+If a match is found in CDDB then your .mp3 and .cdg files will use these names
+instead.
+
+---------------------------------------------------------------------------
+
+CDG2BIN QUICK START
+
+To create your own custom CD+G discs with files stored on your machine, use
+cdg2bin to create a disc image and cdrdao to write it to a CD-R. cdg2bin's
+command-line syntax is straightforward:
+
+$ cdg2bin.py [options] <files>
+
+You must pass at least one CD+G track to cdg2bin to create a disc image. To
+provide a CD+G track, specify one of the track's two files (the .cdg graphic
+data file or the .mp3/.ogg audio data file), or specify a .zip, .tar.gz, or
+.tar.bz2 archive that contains a single pair of files for a track). Archives
+are handled automatically and transparently.
+
+Given this directory of files:
+
+track01.cdg	track01.ogg	track02.zip	track03.tar.bz2
+
+With track02.zip containing:
+
+track02.cdg	track02.mp3
+
+And track03.tar.bz2 containing:
+
+track03.cdg	track03.mpg
+
+You can create a three track disc with either of the following commands:
+
+$ cdg2bin.py track01.cdg track02.zip track03.tar.bz2
+$ cdg2bin.py track01.ogg track02.zip track03.tar.bz2
+
+(note you can use the CDG or audio file to specify a track -- cdg2bin
+automatically locates the appropriate matching file based on your
+specification)
+
+Wildcards can also be used to easily create a multiple-track disc from every
+track stored in a directory:
+
+$ cdg2bin.py /home/user/karaoke/dk97/*zip
+
+The index file produced (suffixed with .txt) is a plain text file listing the
+CDG filenames placed on the disc (in the order they appear on the disc). It can
+be used to keep track of the disc's contents, or removed; cdrdao does not use
+or need this file to record discs.
+
+cdg2bin needs write access to the directory(ies) where your source files are
+stored if they are archives. It also naturally needs write access to the output
+directory (the current directory if not specified with the -o option).
+
+---------------------------------------------------------------------------
+
+CDG2BIN COMMAND LINE OPTIONS
+
+With no options, cdg2bin will create an image file named cdg.bin, a cue sheet
+named cdg.toc, and an index file named cdg.txt. It uses appropriate
+byte-swapping for little-endian machines (x86 and AMD64) to produce big-endian
+audio data as required by the redbook audio specification.
+
+Use the -o or --output-prefix= option to specify the name of the output files:
+
+$ cdg2bin.py -o MYDISC001 /home/user/karaoke/dk97/*zip
+$ cdg2bin.py --output-prefix=MYDISC001 /home/user/karaoke/dk97/*zip
+
+This produces MYDISC001.bin, MYDISC001.toc, and MYDISC001.txt instead of cdg.bin, cdg.toc, and cdg.txt.
+
+Use the -s or --split-image option to write each track into its own individual
+.bin file. A single .toc cue sheet will still be created that correctly
+specifies each of these individual .bin files:
+
+$ cdg2bin.py -s /home/user/karaoke/dk97/*zip
+$ cdg2bin.py --split-image /home/user/karaoke/dk97/*zip
+
+Use the -b or --byte-swap option to change how audio data is produced by the
+MP3 decoder (the OGG Vorbis decoder always produces the correct, big-endian
+output, regardless of platform). If your CD images show correct graphics but
+play static, use this option to generate a new image and record the disc again.
+
+Use the -r or --raw option to write raw R-W subchannel data instead of cooked
+R-W subchannel data (the default). If your recorder cannot record a CD with
+cooked data, use this option to produce raw output. The .toc cue sheet is
+written properly to reflect which data scheme is used.
+
+---------------------------------------------------------------------------
+
+CDRDAO WRITING INSTRUCTIONS
+
+Once you have produced an image with cdg2bin, you can write it to your recorder
+with cdrdao:
+
+   $ cdrdao write --device /dev/cdroms/cdrom0 -speed 4 cue.toc
+
+Replace /dev/cdroms/cdrom0 with the appropriate device if this doesn't work
+(try /dev/hdc for a secondary master CD recorder). The -speed argument is
+optional, but highly recommended (the slower you can record the CD, the more
+likely it is to work properly in a standalone CD+G player; they are notoriously
+picky devices.
+
+---------------------------------------------------------------------------
+
+MP3+G PLAYER
+
+cdgtools does not contain an MP3+G player. We have also released a player under
+our sister project PyKaraoke. See http://www.kibosh.org/pykaraoke/ for more
+details
+
+---------------------------------------------------------------------------
+
+SUGGESTIONS
+
+This is an early release of cdgtools. Please let us know if there are any
+features you would like to see added, or you have any other suggestions or bug
+reports. Contact the project at <kelvinl@users.sf.net>.
+
+---------------------------------------------------------------------------
