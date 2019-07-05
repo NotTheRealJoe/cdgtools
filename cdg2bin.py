@@ -13,7 +13,7 @@ NOTSUPPORTED = 5
 
 
 def show_error(errno=0):
-    if error == NOFILES:
+    if errno == NOFILES:
         print 'ERROR: No valid files were specified.'
         sys.exit(2)
 
