@@ -44,27 +44,25 @@ def findmatch(file):
     a tuple (cdg filename, audio filename)."""
 
     ext = file[-3:].lower()
-    base = file[:-3]
+    basename = os.path.basename(file)
+    basename_no_ext = basename[:-3]
+    dirname = os.path.dirname(file)
 
     audio_file = None
     cdg_file = None
 
-    if ext == 'mp3' or ext == 'ogg' or ext == 'wav':
+    if ext == 'mp3' or ext == 'ogg':
         audio_file = file
-        find = 'cdg'
-        match = ['cdg']
     elif ext == 'cdg':
         cdg_file = file
-        find = 'audio'
-        match = ['ogg', 'mp3']
 
-    for possible_ext in match:
-        found_file = base + possible_ext
-        if os.path.isfile(found_file):
-            if find == 'cdg':
-                cdg_file = found_file
-            elif find == 'audio':
-                audio_file = found_file
+    for possible_file in os.listdir(dirname):
+        pl = possible_file.lower()
+        if cdg_file is None and pl == basename_no_ext.lower() + "cdg":
+            cdg_file = os.path.join(dirname, possible_file)
+            break
+        elif audio_file is None and (pl == basename_no_ext.lower() + "mp3" or pl == basename_no_ext.lower() + 'ogg'):
+            audio_file = os.path.join(dirname, possible_file)
             break
 
     if cdg_file and audio_file:
